@@ -171,46 +171,45 @@
 
 #Cumulative Histogram
 
-#import yaml
-#from numpy import *
-#from os import listdir
-#from os.path import isfile
+import yaml
+from numpy import *
+from os import listdir
+from os.path import isfile
 
-#ann = yaml.load(file("../annotations.yaml"))
-#audioFiles = listdir("../audio/")
-#pitchDir = "../features/pitch-new/"
-#allPitch = []
+ann = yaml.load(file("/home/gopal/workspace/annotations.yaml"))
+pitchDir = "/home/gopal/workspace/features/pitch-yinjustin/"
+allPitch = []
 
-#for f in audioFiles:
-	#if not isfile("../audio/"+f):
-		#print f, "is not a file!"
-		#continue
-	#mbid = f[:-4]
-	#pitchFile = pitchDir+mbid+"/"+mbid+"-YINJustin.txt"
-	#pitch = loadtxt(pitchFile)
+for f in audioFiles:
+	if not isfile("../audio/"+f):
+		print f, "is not a file!"
+		continue
+	mbid = f[:-4]
+	pitchFile = pitchDir+mbid+"/"+mbid+"-YINJustin.txt"
+	pitch = loadtxt(pitchFile)
 	
-	#valid_pitch = [0]*len(pitch)
-	#timeStep = 0.0029024956342978405
-	#try:
-		#vocalSegments = ann[mbid]['vocal']
-		#for segment in vocalSegments['segments']:
-			#start = int(segment['start']/timeStep)
-			#end = int(segment['end']/timeStep) - 1
-			#if end > len(pitch):
-				#end = len(pitch)
-			#i = start
-			#while (i < end):
-				#if pitch[i] > 0:
-					#valid_pitch[i] = pitch[i]
-				#i += 1
-	#except:
-		#valid_pitch = pitch
-		#print "No annotations found, using the full track of", mbid
+	valid_pitch = [0]*len(pitch)
+	timeStep = 0.0029024956342978405
+	try:
+		vocalSegments = ann[mbid]['vocal']
+		for segment in vocalSegments['segments']:
+			start = int(segment['start']/timeStep)
+			end = int(segment['end']/timeStep) - 1
+			if end > len(pitch):
+				end = len(pitch)
+			i = start
+			while (i < end):
+				if pitch[i] > 0:
+					valid_pitch[i] = pitch[i]
+				i += 1
+	except:
+		valid_pitch = pitch
+		print "No annotations found, using the full track of", mbid
 	
-	#valid_pitch = [i for i in valid_pitch if i > 0]
-	#tonic = ann[mbid]['tonic']['value']
-	#cents = [1200*log2(i/tonic) for i in valid_pitch]
-	#allPitch.extend(cents)
+	valid_pitch = [i for i in valid_pitch if i > 0]
+	tonic = ann[mbid]['tonic']['value']
+	cents = [1200*log2(i/tonic) for i in valid_pitch]
+	allPitch.extend(cents)
 	
 #Retain Good MBIDs
 
@@ -286,23 +285,23 @@
 	#allPitch.extend(cents)
 
 #savetxt(raaga+"-allPitch.txt", allPitch)
-def computerParameters(paths):
-	[kn, kbinCenters, kcents] = iL.computeHist(paths)
-	refPeakInfo = iL.findPeaks(kn, kbinCenters, lookahead=20, delta=0.00005, averageHist=True)
-	allParams = {}
-
-	for i in paths:
-		[n, binCenters, cents] = iL.computeHist([i])
-		peakInfo = iL.findPeaks(n, binCenters, lookahead=10, delta=0.00002, averageHist=False, refPeaks=refPeakInfo["peaks"])
-		params = iL.characterizePeaks(peakInfo["peaks"][0], peakInfo["valleys"][0], cents, distribThresh=50)
-		mbid = i.split("/")[-1][:-4]
-		allParams[mbid] = params
-	
-	return allParams
-
-for mbid in tonicAbsentPhaseII:
-	data = loadtxt("tonic-annotation/"+mbid+"_0-180.txt", dtype="str", delimiter="\t")
-	if mbid not in annotations.keys():
-		annotations[mbid.encode("UTF-8")] = {"tonic":{"value":float(data[0].encode("UTF-8")), "annotator":"gopal"}}
-	else:
-		annotations[mbid]["tonic"] = {"value":float(data[0].encode("UTF-8")), "annotator":"gopal"}
+#def computerParameters(paths):
+#	[kn, kbinCenters, kcents] = iL.computeHist(paths)
+#	refPeakInfo = iL.findPeaks(kn, kbinCenters, lookahead=20, delta=0.00005, averageHist=True)
+#	allParams = {}
+#
+#	for i in paths:
+#		[n, binCenters, cents] = iL.computeHist([i])
+#		peakInfo = iL.findPeaks(n, binCenters, lookahead=10, delta=0.00002, averageHist=False, refPeaks=refPeakInfo["peaks"])
+#		params = iL.characterizePeaks(peakInfo["peaks"][0], peakInfo["valleys"][0], cents, distribThresh=50)
+#		mbid = i.split("/")[-1][:-4]
+#		allParams[mbid] = params
+#	
+#	return allParams
+#
+#for mbid in tonicAbsentPhaseII:
+#	data = loadtxt("tonic-annotation/"+mbid+"_0-180.txt", dtype="str", delimiter="\t")
+#	if mbid not in annotations.keys():
+#		annotations[mbid.encode("UTF-8")] = {"tonic":{"value":float(data[0].encode("UTF-8")), "annotator":"gopal"}}
+#	else:
+#		annotations[mbid]["tonic"] = {"value":float(data[0].encode("UTF-8")), "annotator":"gopal"}

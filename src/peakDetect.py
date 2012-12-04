@@ -113,7 +113,9 @@ def peakdetect(y_axis, x_axis = None, lookahead = 300, delta=0):
 	#perform some checks
 	if lookahead < 1:
 		raise ValueError, "Lookahead must be '1' or above in value"
-	if not (np.isscalar(delta) and delta >= 0):
+	#NOTE: commented this to use the function with log(histogram)
+	#if not (np.isscalar(delta) and delta >= 0):
+	if not (np.isscalar(delta)):
 		raise ValueError, "delta must be a positive number"
 	
 	#maxima and minima candidates are temporarily stored in

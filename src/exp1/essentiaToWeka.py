@@ -28,7 +28,8 @@ def toWeka(pathGiven, label, descriptor_flag=1):
 	if descriptor_flag == 0:
 		relation_name = "classification"
 		wekafile.write("@RELATION classification\n\n")
-		all_labels = ["ananda-bhairavi", "bhairavi", "hindolam", "kalyani", "khamas", "pantuvarali", "saveri", "sourashtram", "thodi"]
+		all_labels = ['begada', 'bhairavi', 'hindolam', 'kambhoji', 'mukhari', 'thodi']
+		#all_labels = ['bhairavi', 'hindolam', 'thodi']
 		#all_labels = ['Abhishek-Raghuram', 'S.-Sowmya', 'Aruna-Sairam', 'D.-K.-Pattammal', 'D.-K.-Jayaraman', 'T.-N.-Seshagopalan', 'Sanjay-Subrahmanyan', 'P.-Unnikrishnan', 'T.-M.-Krishna', 'Ranjani-Gayatri', 'G.-N.-Balasubramaniam', 'M.-D.-Ramanathan', 'Dandapani-Desikar']
 		
 	extension = ".sig"
@@ -63,20 +64,26 @@ def toWeka(pathGiven, label, descriptor_flag=1):
 					data_entry = data_entry+str(pool[i])+", "
 				elif isinstance(pool[i], numpy.ndarray):
 					data_entry = data_entry+", ".join(str(x) for x in pool[i])+", "
+				else:
+					print "Something wrong here:", i, pool[i]
 			data_entry = data_entry+label
 			wekafile.write(data_entry+"\n")
 
 if __name__ == '__main__':
 	#For building model
 	#toWeka('weka/ananda-bhairavi/', 'ananda-bhairavi', descriptor_flag=0)
-	#toWeka('weka/bhairavi/', 'bhairavi', descriptor_flag=1)
-	#toWeka('weka/hindolam/', 'hindolam', descriptor_flag=0)
+	toWeka('../../data/exp1/weka/bhairavi/', 'bhairavi', descriptor_flag=0)
+	toWeka('../../data/exp1/weka/hindolam/', 'hindolam', descriptor_flag=1)
 	#toWeka('weka/kalyani/', 'kalyani', descriptor_flag=0)
-	toWeka('weka/khamas/', 'khamas', descriptor_flag=0)
+	#toWeka('weka/khamas/', 'khamas', descriptor_flag=0)
 	#toWeka('weka/pantuvarali/', 'pantuvarali', descriptor_flag=1)
 	#toWeka('weka/saveri/', 'saveri', descriptor_flag=1)
-	toWeka('weka/sourashtram/', 'sourashtram', descriptor_flag=1)
-	#toWeka('weka/thodi/', 'thodi', descriptor_flag=1)
+	#toWeka('weka/sourashtram/', 'sourashtram', descriptor_flag=1)
+	toWeka('../../data/exp1/weka/thodi/', 'thodi', descriptor_flag=1)
+	toWeka('../../data/exp1/weka/begada/', 'begada', descriptor_flag=1)
+	toWeka('../../data/exp1/weka/kambhoji/', 'kambhoji', descriptor_flag=1)
+	toWeka('../../data/exp1/weka/manji/', 'manji', descriptor_flag=1)
+	toWeka('../../data/exp1/weka/mukhari/', 'mukhari', descriptor_flag=1)
 	
 	#toWeka('weka/performers/Abhishek Raghuram/', 'Abhishek-Raghuram', descriptor_flag=0)
 	#toWeka('weka/performers/Aruna Sairam/', 'Aruna Sairam', descriptor_flag=1)

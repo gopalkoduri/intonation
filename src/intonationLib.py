@@ -34,69 +34,72 @@ def findNearestIndex(arr,value):
 	index=(np.abs(arr-value)).argmin()
 	return index
 
-def rangeFilter(arr, _min, _max):
+def rangeFilter(arr, _min, _max, scale="cents"):
 	def _filter(x):
 		if x >= _min and x <= _max:
 			return x
 		else:
-			return -1
+			if scale == "cents":
+				return -10000
+			else:
+				return -1
 	res = [_filter(i) for i in arr]
 	return res
 
 
 #Functions for computation
 
-def pitchJustin(audiofile, pitchfile, chunksize=300, overlap=0.29024956342978405, executable = "Z:/users/gkoduri/JustinPitchEvalBySynth/SalamonGomezMirex2011a/StreamEstimation.exe"):
-	"""
-	A function to extract pitch from longer files, using Justin's code. Input arguments
-	are audio file's path, the chunksize, overlap (in seconds) and the path to executable.
-	The overlap must be a multiple of 10 when converted to milliseconds.
-	"""
-	stepSize = 0.0029024956342978405 #NOTE: HARDCODED Values!!
-	rem = mod(chunksize, stepSize)
-	chunksize = chunksize-rem
-	wfile = wave.open (audiofile, "r")
-	length = (1.0 * wfile.getnframes ()) / wfile.getframerate ()
-	if length > chunksize:
-		start = 0
-		finalFile = file(pitchfile, "w+")
-		tempdir = "tmpPitch/"
-		if not exists(tempdir):
-			mkdir(tempdir)
-
-		while start<length:
-			base = tempdir+str(uuid1())
-			newaudiofile = base+".wav"
-			newpitchfile = base+".txt"
-			end = start+chunksize
-			if end > length:
-				end = length
-			loader = es.EasyLoader(filename=audiofile, startTime=start, endTime=end)
-			audio = loader()
-			writer = es.MonoWriter(filename = newaudiofile)
-			writer(audio)
-			command = executable+' "'+newaudiofile+'" "'+newpitchfile+'"'
-			print command
-			proc = subprocess.Popen(command).wait()
-			nextStart = start+chunksize-overlap
-			data = np.loadtxt(newpitchfile, dtype="float", delimiter="\t")
-			data[:, 0] = data[:, 0]+start
-			stepSize = int(overlap/chunksize)
-			tobeDeleted = []
-			for i in xrange(len(data[-1*stepSize:])):
-				if data[i][0] >= nextStart:
-					tobeDeleted.append(i)
-
-			data = np.delete(data, tobeDeleted, axis=0)
-			for i in xrange(len(data)):
-					finalFile.write(str(data[i][0])+"\t"+str(data[i][1])+"\n")
-			print start, tobeDeleted
-			start=nextStart
-		finalFile.close()
-	else:
-		command = executable+" "+audiofile+" "+pitchfile
-		print command
-		proc = subprocess.Popen(command).wait()
+#def pitchJustin(audiofile, pitchfile, chunksize=300, overlap=0.29024956342978405, executable = "Z:/users/gkoduri/JustinPitchEvalBySynth/SalamonGomezMirex2011a/StreamEstimation.exe"):
+#	"""
+#	A function to extract pitch from longer files, using Justin's code. Input arguments
+#	are audio file's path, the chunksize, overlap (in seconds) and the path to executable.
+#	The overlap must be a multiple of 10 when converted to milliseconds.
+#	"""
+#	stepSize = 0.0029024956342978405 #NOTE: HARDCODED Values!!
+#	rem = mod(chunksize, stepSize)
+#	chunksize = chunksize-rem
+#	wfile = wave.open (audiofile, "r")
+#	length = (1.0 * wfile.getnframes ()) / wfile.getframerate ()
+#	if length > chunksize:
+#		start = 0
+#		finalFile = file(pitchfile, "w+")
+#		tempdir = "tmpPitch/"
+#		if not exists(tempdir):
+#			mkdir(tempdir)
+#
+#		while start<length:
+#			base = tempdir+str(uuid1())
+#			newaudiofile = base+".wav"
+#			newpitchfile = base+".txt"
+#			end = start+chunksize
+#			if end > length:
+#				end = length
+#			loader = es.EasyLoader(filename=audiofile, startTime=start, endTime=end)
+#			audio = loader()
+#			writer = es.MonoWriter(filename = newaudiofile)
+#			writer(audio)
+#			command = executable+' "'+newaudiofile+'" "'+newpitchfile+'"'
+#			print command
+#			proc = subprocess.Popen(command).wait()
+#			nextStart = start+chunksize-overlap
+#			data = np.loadtxt(newpitchfile, dtype="float", delimiter="\t")
+#			data[:, 0] = data[:, 0]+start
+#			stepSize = int(overlap/chunksize)
+#			tobeDeleted = []
+#			for i in xrange(len(data[-1*stepSize:])):
+#				if data[i][0] >= nextStart:
+#					tobeDeleted.append(i)
+#
+#			data = np.delete(data, tobeDeleted, axis=0)
+#			for i in xrange(len(data)):
+#					finalFile.write(str(data[i][0])+"\t"+str(data[i][1])+"\n")
+#			print start, tobeDeleted
+#			start=nextStart
+#		finalFile.close()
+#	else:
+#		command = executable+" "+audiofile+" "+pitchfile
+#		print command
+#		proc = subprocess.Popen(command).wait()
 
 def discreteFilter(mbid, srcdata=None, slopeThresh=1500, centsThresh=50, returnScale="cents", tonic=None, annotationFile="/home/gopal/workspace/annotations.yaml"):
 	"""If 'srcdata' is given, discreteFilter works on that. Otherwise, it works with mbid. Data, if given should be in
@@ -156,7 +159,9 @@ def pitch(mbid, returnScale="cents", tonic=None, vocal=False, annotationFile="/h
 	Return pitch either in hertz or cent scale, filtered by 
 
 	"""
-	filepath = "/home/gopal/workspace/features/pitch-yinjustin/"+mbid+".txt"
+	#filepath = "/home/gopal/workspace/features/pitch-yinjustin/"+mbid+".txt"
+	filepath = "/home/gopal/workspace/features/pitch-justin/"+mbid+"/"+mbid+"-Justin.txt"
+	#filepath = "/home/gopal/workspace/features/pitch-yin/"+mbid+".txt"
 
 	try:
 			data = np.loadtxt(filepath, delimiter="\t", dtype="float")
@@ -315,7 +320,7 @@ def findPeaks(n, binCenters, smoothingFactor=5, lookahead=15, delta=0.00002, ave
 		xCleanPeaks = []
 		yCleanPeaks = []
 		#octave propagation of the reference peaks
-		propThresh = 30
+		propThresh = 30 #NOTE: Hardcoded
 		tempPeaks = [i+1200 for i in refPeaks[0]]
 		tempPeaks.extend([i-1200 for i in refPeaks[0]])
 		extendedPeaks = []
@@ -323,15 +328,15 @@ def findPeaks(n, binCenters, smoothingFactor=5, lookahead=15, delta=0.00002, ave
 		for i in tempPeaks:
 			#if a peak exists around, don't add this new one.
 			nearestInd = findNearestIndex(refPeaks[0], i)
-			diff = refPeaks[0][nearestInd] - i
-			diff = np.mod(abs(diff), 1200)
+			diff = abs(refPeaks[0][nearestInd] - i)
+			diff = np.mod(diff, 1200)
 			if diff > propThresh:
 				extendedPeaks.append(i)
 		#print extendedPeaks
 		for peakLocationIndex in xrange(len(xPeaks)):
 			extPeakLocationIndex = findNearestIndex(extendedPeaks, xPeaks[peakLocationIndex])
-			diff = xPeaks[peakLocationIndex] - extendedPeaks[extPeakLocationIndex]
-			diff = np.mod(abs(diff), 1200)
+			diff = abs(xPeaks[peakLocationIndex] - extendedPeaks[extPeakLocationIndex])
+			diff = np.mod(diff, 1200)
 			#print xPeaks[peakLocationIndex], extendedPeaks[extPeakLocationIndex], diff
 			if diff < refThresh:
 				xCleanPeaks.append(xPeaks[peakLocationIndex])
@@ -360,8 +365,10 @@ def characterizePeaks(peaks, valleys, cents, maxDistribThresh=50, minDistribThre
 	for i in xrange(len(peaks[0])):
 		p = peaks[0][i]
 		#Set left and right bounds of the distribution.
-		leftBound = p-maxDistribThresh
-		rightBound = p+maxDistribThresh
+		leftBoundMax = p-maxDistribThresh
+		rightBoundMax = p+maxDistribThresh
+		leftBound = leftBoundMax
+		rightBound = rightBoundMax
 		nearestValleyIndex = findNearestIndex(valleys[0], p)
 		if p > valleys[0][nearestValleyIndex]:
 			leftBound = valleys[0][nearestValleyIndex]
@@ -369,7 +376,7 @@ def characterizePeaks(peaks, valleys, cents, maxDistribThresh=50, minDistribThre
 				rightBound = p+maxDistribThresh
 			else:
 				offset = nearestValleyIndex+1
-				nearestValleyIndex = findNearestIndex(valleys[0][nearestValleyIndex+1:], p)
+				nearestValleyIndex = findNearestIndex(valleys[0][offset:], p)
 				rightBound = valleys[0][offset+nearestValleyIndex]
 		else:
 			rightBound = valleys[0][nearestValleyIndex]
@@ -379,28 +386,31 @@ def characterizePeaks(peaks, valleys, cents, maxDistribThresh=50, minDistribThre
 				nearestValleyIndex = findNearestIndex(valleys[0][:nearestValleyIndex], p)
 				leftBound = valleys[0][nearestValleyIndex]
 		
-		if p-leftBound < minDistribThresh:
+		#Think in terms of x-axis.
+		#leftBound should be at least minDistribThresh less than p, and at max maxDistribThresh less than p
+		#rightBound should be at least minDistribThresh greater than p, and at max maxDistribThresh greater than p
+		if leftBound < leftBoundMax:
+			leftBound = leftBoundMax
+		elif leftBound > p-minDistribThresh:
 			leftBound = p-minDistribThresh
-		if rightBound-p < minDistribThresh:
+
+		if rightBound > rightBoundMax:
+			rightBound = rightBoundMax
+		elif rightBound < p+minDistribThresh:
 			rightBound = p+minDistribThresh
 			
+		#Bounds should be at equal distance on either side. If they are not, make them.
 		newThresh = 0
 		if p-leftBound < rightBound-p:
 			newThresh = p-leftBound
 		else:
 			newThresh = rightBound-p
-		if newThresh < maxDistribThresh:
-			leftBound = p-newThresh
-			rightBound = p+newThresh
-		else:
-			if p-leftBound > maxDistribThresh:
-				leftBound = p-maxDistribThresh
-			if rightBound-p > maxDistribThresh:
-				rightBound = p+maxDistribThresh
+		leftBound = p-newThresh
+		rightBound = p+newThresh
 		
 		#extract the distribution and estimate the parameters
-		distribution = cents[cents>leftBound]
-		distribution = distribution[distribution<rightBound]
+		distribution = cents[cents>=leftBound]
+		distribution = distribution[distribution<=rightBound]
 		#print p, "\t", len(distribution), "\t", leftBound, "\t", rightBound
 		swaraIndex = findNearestIndex(JICents, p)
 		swara = swaras[swaraIndex]
@@ -431,6 +441,107 @@ def computeParameters(paths):
 	return allParams
 
 
+# Functions for mean-window approach
+
+#def isolateSwaras(data, windowSize=150, hopSize=30):
+#	"""windowSize and hopSize should be given in milliseconds."""
+#	windowSize = windowSize/1000.0
+#	hopSize = hopSize/1000.0
+#	exposure = int(windowSize/hopSize)
+#	boundary = windowSize-hopSize
+#	finaleInd = findNearestIndex(data[:, 0], data[-1, 0]-boundary)
+#
+#	justIntonation = [['Sa', 1.0], ['R1',16.0/15.0], ['R2/G1',9.0/8.0],\
+#	['G2/R3',6.0/5.0], ['G3',5.0/4.0], ['M1',4.0/3.0], ['M2',64.0/45.0],\
+#	['P',3.0/2.0], ['D1',8.0/5.0], ['D2/N1',5.0/3.0],\
+#	['D3/N2',16.0/9.0], ['N3',15.0/8.0]]
+#	swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^", "Sa^^", "R1^^", "R2/G1^^", "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]
+#	JICents = []
+#	for interval in justIntonation:
+#		p = int(1200.0*np.log2(interval[1]))
+#		JICents.append(p)
+#		JICents.append(p-1200)
+#		JICents.append(p+1200)
+#		JICents.append(p+2400)
+#	JICents.sort()
+#
+#	startInd = 0
+#	endInd = findNearestIndex(data[:,0], windowSize) 
+#	swaraDistributions = {}
+#	while endInd < finaleInd:
+#		_means = []
+#		for i in xrange(exposure):
+#			_means.append(np.mean(data[startInd:endInd, 0]))
+#			if endInd < finaleInd:
+#				prevStartInd = startInd
+#				startInd = findNearestIndex(data[:,0], data[startInd,0]+hopSize)
+#				endInd = findNearestIndex(data[:,0], data[startInd,0]+windowSize)
+#			else:
+#				break
+#		_median = np.median(_means)
+#		ind = findNearestIndex(_median, JICents)
+#		if swaras[ind] in swaraDistributions.keys():
+#			np.append(swaraDistributions[swaras[ind]], data[prevStartInd:startInd-1,1])
+#		else:
+#			swaraDistributions[swaras[ind]] = data[prevStartInd:startInd-1,1]
+#	return swaraDistributions
+
+def isolateSwaras(data, windowSize=150, hopSize=30):
+	"""windowSize and hopSize should be given in milliseconds."""
+	windowSize = windowSize/1000.0
+	hopSize = hopSize/1000.0
+	exposure = int(windowSize/hopSize)
+	boundary = windowSize-hopSize
+	finaleInd = findNearestIndex(data[:, 0], data[-1, 0]-boundary)
+
+	justIntonation = [['Sa', 1.0], ['R1',16.0/15.0], ['R2/G1',9.0/8.0],\
+	['G2/R3',6.0/5.0], ['G3',5.0/4.0], ['M1',4.0/3.0], ['M2',64.0/45.0],\
+	['P',3.0/2.0], ['D1',8.0/5.0], ['D2/N1',5.0/3.0],\
+	['D3/N2',16.0/9.0], ['N3',15.0/8.0]]
+	swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^", "Sa^^", "R1^^", "R2/G1^^", "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]
+	JICents = []
+	for interval in justIntonation:
+		p = int(1200.0*np.log2(interval[1]))
+		JICents.append(p)
+		JICents.append(p-1200)
+		JICents.append(p+1200)
+		JICents.append(p+2400)
+	JICents.sort()
+
+	startInd = 0
+	#HARDCODED
+	interval = 0.0029
+	windowStep = windowSize/interval
+	hopStep = hopSize/interval
+	endInd = windowStep
+	swaraDistributions = {}
+	#newPitch = np.zeros(len(data))-10000
+	_means = []
+	while endInd < finaleInd:
+		temp = data[startInd:endInd, 1][data[startInd:endInd,1]>-10000]
+		_means.append(np.mean(temp))
+		startInd = startInd+hopStep
+		endInd = startInd+windowStep
+
+	for i in xrange(exposure, len(_means)-exposure+1):
+		_median = np.median(_means[i-exposure:i])
+		if _median < -5000: continue
+		ind = findNearestIndex(_median, JICents)
+		sliceEnd = (i-exposure)*hopStep+windowStep
+		sliceBegin = sliceEnd-hopStep
+		#print sliceBegin, sliceEnd, JICents[ind]
+		#newPitch[sliceBegin:sliceEnd] = JICents[ind]
+		if swaras[ind] in swaraDistributions.keys():
+			swaraDistributions[swaras[ind]] = np.append(swaraDistributions[swaras[ind]], data[sliceBegin:sliceEnd,1])
+		else:
+			swaraDistributions[swaras[ind]] = data[sliceBegin:sliceEnd,1]
+		
+	for swara in swaraDistributions.keys():
+		swaraDistributions[swara] = swaraDistributions[swara][swaraDistributions[swara] > -10000]
+	return swaraDistributions
+	#return newPitch
+
+
 #Plotting functions
 
 def plotIntervals(n, binCenters):
@@ -446,30 +557,31 @@ def plotIntervals(n, binCenters):
 	
 	#Intervals
 	spacing = 0.02*max(n)
+	labelFontSize = 20
 	for interval in JICents:
 		p.axvline(x=interval[1], ls='-.', c='g', lw='1')
-		p.text(interval[1]+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
+		p.text(interval[1]+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
 		if interval[1]-2400 >= min(binCenters):
 			p.axvline(x=interval[1]-2400, ls='--', c='r', lw='0.5')
-			p.text(interval[1]-2400+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
+			p.text(interval[1]-2400+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
 		if interval[1]-1200 >= min(binCenters):
 			p.axvline(x=interval[1]-1200, ls=':', c='b', lw='0.5')
-			p.text(interval[1]-1200+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
+			p.text(interval[1]-1200+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
 		if interval[1]+1200 <= max(binCenters):
 			p.axvline(x=interval[1]+1200, ls=':', c='b', lw='0.5')
-			p.text(interval[1]+1200+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
+			p.text(interval[1]+1200+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
 		if interval[1]+2400 <= max(binCenters):
 			p.axvline(x=interval[1]+2400, ls='-.', c='r', lw='0.5')
-			p.text(interval[1]+2400+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
+			p.text(interval[1]+2400+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
 		spacing = -1*spacing;
 
-def plotHist(n, binCenters, peakInfo=None, smoothingFactor=5, newFigure=True):
+def plotHist(n, binCenters, peakInfo=None, smoothingFactor=5, newFigure=True, intervals=True):
 	"""This function plots histogram together with its smoothed
 	version and peak information if provided. Just intonation 
 	intervals are plotted for a reference."""
 	if newFigure:
 		p.figure()
-	p.plot(binCenters, n, ls='-', c='#00CC00', lw='1')
+	#p.plot(binCenters, n, ls='-', c='#00CC00', lw='1')
 	nS = gaussian_filter(n, smoothingFactor)
 	p.plot(binCenters, nS, ls='-', c='b', lw='1.5')
 	
@@ -503,30 +615,32 @@ def plotHist(n, binCenters, peakInfo=None, smoothingFactor=5, newFigure=True):
 		#ax.add_artist(at)
 
 	#Intervals
-	spacing = 0.02*max(n)
-	for interval in JICents:
-		p.axvline(x=interval[1], ls='-.', c='g', lw='1')
-		p.text(interval[1]+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
-		if interval[1]-2400 >= min(binCenters):
-			p.axvline(x=interval[1]-2400, ls='--', c='r', lw='0.5')
-			p.text(interval[1]-2400+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
-		if interval[1]-1200 >= min(binCenters):
-			p.axvline(x=interval[1]-1200, ls=':', c='b', lw='0.5')
-			p.text(interval[1]-1200+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
-		if interval[1]+1200 <= max(binCenters):
-			p.axvline(x=interval[1]+1200, ls=':', c='b', lw='0.5')
-			p.text(interval[1]+1200+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
-		if interval[1]+2400 <= max(binCenters):
-			p.axvline(x=interval[1]+2400, ls='-.', c='r', lw='0.5')
-			p.text(interval[1]+2400+3, spacing+4*max(n)/5, interval[0], fontsize='x-small')
-		spacing = -1*spacing;
+	if intervals:
+		labelFontSize = 15
+		spacing = 0.02*max(n)
+		for interval in JICents:
+			p.axvline(x=interval[1], ls='-.', c='g', lw='1.5')
+			#p.text(interval[1]+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
+			if interval[1]-2400 >= min(binCenters):
+				p.axvline(x=interval[1]-2400, ls='--', c='r', lw='0.5')
+				#p.text(interval[1]-2400+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
+			if interval[1]-1200 >= min(binCenters):
+				p.axvline(x=interval[1]-1200, ls=':', c='b', lw='0.5')
+				#p.text(interval[1]-1200+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
+			if interval[1]+1200 <= max(binCenters):
+				p.axvline(x=interval[1]+1200, ls=':', c='b', lw='0.5')
+				#p.text(interval[1]+1200+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
+			if interval[1]+2400 <= max(binCenters):
+				p.axvline(x=interval[1]+2400, ls='-.', c='r', lw='0.5')
+				#p.text(interval[1]+2400+3, spacing+4*max(n)/5, interval[0], fontsize=labelFontSize)
+			spacing = -1*spacing;
 
 	p.title("Tonic-aligned pitch histogram without folding octaves")
 	p.xlabel("Pitch value (Cents)")
 	p.ylabel("Normalized frequency of occurence")
 	if peakInfo:
-		p.plot(peakInfo["peaks"][0], peakInfo["peaks"][1], 'rD', ms=5)
-		p.plot(peakInfo["valleys"][0], peakInfo["valleys"][1], 'yD', ms=5)
+		p.plot(peakInfo["peaks"][0], peakInfo["peaks"][1], 'rD', ms=10)
+		#p.plot(peakInfo["valleys"][0], peakInfo["valleys"][1], 'yD', ms=5)
 	p.show()
 
 

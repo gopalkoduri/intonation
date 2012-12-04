@@ -1,5 +1,3 @@
-import sys
-sys.path.append("intonationLib/src")
 
 #import intonationLib as iL
 #import DAO as dao
@@ -139,8 +137,8 @@ import yaml
 from scipy.ndimage.filters import gaussian_filter
 from pylab import *
 
-kalyani = yaml.load(file("../data/exp1/mukhari.yaml"))
-kpaths = ["../../features/pitch-yinjustin/"+i+".txt" for i in kalyani.keys()]
+raaga = yaml.load(file("../data/exp1/mukhari.yaml"))
+kpaths = ["../../features/pitch-yinjustin/"+i+".txt" for i in raaga.keys()]
 [kaln, kalbinCenters, kalcents] = iL.computeHist(kpaths[:8])
 kalnS = gaussian_filter(kaln, 5)
 refPeakInfo = iL.findPeaks(kalnS, kalbinCenters, smoothingFactor=5, lookahead=20, delta=0.00005, averageHist=True)
@@ -155,14 +153,14 @@ for i in kpaths[:8]:
 	allbinCenters.append(binCenters)
 	allnS.append(gaussian_filter(n, 5))
 
-#_len = len(allnS)
-_len = 3
+_len = len(allnS)
 for i in xrange(_len):
 	plot(allbinCenters[i], allnS[i], lw=0.5)
 
 plot(kalbinCenters, kalnS, lw=6, c="green")
-xlabel("Pitch value (Cents)", fontsize=26)
-ylabel("Normalized frequency of occurence", fontsize=26)
-
+xlabel("Pitch value (Cents)", fontsize=30)
+ylabel("Normalized frequency", fontsize=30)
+xticks(fontsize=22)
+yticks(fontsize=22)
 plot(refPeakInfo["peaks"][0], refPeakInfo["peaks"][1], 'rD', ms=10)
 plot(refPeakInfo["valleys"][0], refPeakInfo["valleys"][1], 'yD', ms=10)

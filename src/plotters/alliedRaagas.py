@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import yaml
+import pickle
 
-allParameters = yaml.load(file("../../data/allParameters-25-50.yaml"))
+allParameters = yaml.load(file("../../data/exp2/allParameters.yaml", "r"))
 
 param = "skew2"
 _ylabel = "Skewness"
@@ -11,11 +12,11 @@ paramValues = {}
 #swaras = ["R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^"]
 #swaras = ["Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^"]
 
-raagas = ["mukhari", "bhairavi", "manji"]
+#raagas = ["mukhari", "bhairavi", "manji"]
 #Kurtosis - mukhari, bhairavi, manji
 #swaras = ["R2/G1", "M1", "Sa^", "R2/G1^"]
 #Skew - mukhari, bhairavi, manji
-swaras = ["D2/N1", "R2/G1", "P", "P^"]
+#swaras = ["D2/N1", "R2/G1", "P", "P^"]
 
 #raagas = ["begada", "kambhoji"]
 #Variance - Begada, Kambhoji
@@ -23,9 +24,9 @@ swaras = ["D2/N1", "R2/G1", "P", "P^"]
 #Kurtosis - Begada, Kambhoji
 #swaras = ["G3", "G3^", "D2/N1", "D2/N1^"]
 
-#raagas = ["suratti", "kedaragowla"]
+raagas = ["suratti", "kedaragowla"]
 ##Skew
-#swaras = ["M1", "M1^", "P", "P^"]
+swaras = ["M1", "M1^", "P", "P^"]
 
 #raagas = ["bhairavi", "saveri", "anandabhairavi", "khamas", "thodi",  "pantuvarali", "kalyani", "sourashtram"]
 #swaras = ["P"]

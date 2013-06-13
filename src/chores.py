@@ -5,66 +5,6 @@
 #from os.path import exists, abspath
 #from os import mkdir
 
-#chdir('Z:/users/gkoduri/workspace/')
-#
-#
-##raagas = iL.raagasToFile("ragas.txt")
-##analyzed = []
-#
-##for raaga in raagas:
-#	#if raaga in analyzed: continue
-#	#recordings = iL.recordingsByRaagaAliases(raaga)
-#	#if recordings:
-#		#fwriter = file("raagas/hindustani/"+raaga+".txt", "w+")
-#		#for rec in recordings.values():
-#			#if rec[1] == None:
-#				#fwriter.write("None\t"+rec[0]+"\n")
-#			#else:
-#				#fwriter.write(rec[1]+"\t"+rec[0]+"\n")
-#			#analyzed.append(rec[0])
-#		#fwriter.close()
-#		#analyzed = list(set(analyzed))
-#
-#audioDir = "audio-hindustani/3/"
-#pitchDirPrefix = "features/pitch-justin/"
-##dirSuffix = "/alapanas/"
-##dirSuffix = "/kritis/"
-#dirSuffix = "/"
-#for audiofile in listdir(abspath(audioDir)):
-#	if audiofile.endswith(".wav"):
-#		pitchdir = pitchDirPrefix+audiofile[:-4]+dirSuffix
-#		if not exists(pitchdir):
-#	##			if not exists(pitchDirPrefix+raaga):
-#	##				mkdir(pitchDirPrefix+raaga)
-#			mkdir(pitchdir)
-#		pitchfile = audiofile[:-4]
-#		iL.pitchJustin(audioDir+audiofile, pitchdir+pitchfile+"-Justin.txt")
-#		#iL.pitchYIN(audiodir+audiofile, pitchdir+pitchfile+"-YIN.txt")
-
-#fileindex['dheerasankarabharanam'] = iL.recordingsByRaagaAliases('sankarabharanam')
-#fileindex = {}
-#for raaga in raagas:
-	#raaga = raaga[:-4]
-	#fileindex[raaga] = iL.recordingsByRaagaAliases(raaga)
-	
-#for raaga in fileindex.keys():
-	#for mbid in fileindex[raaga].keys():
-		#print "copy", fileindex[raaga][mbid][1], "audio/"+raaga+"/"+mbid+".mp3"
-		#if not os.path.exists("audio/"+raaga):
-				#os.mkdir("audio/"+raaga)
-		#if fileindex[raaga][mbid][1]:
-			#shutil.copy(fileindex[raaga][mbid][1], "audio/"+raaga+"/"+mbid+".mp3")
-
-
-#define _boxplot(swara)
-#swaras = ["Sa", "R2/G1", "G3", "P", "D2/N1"]
-#parameter = "skew2"
-#khamasParams = {}
-#kalyaniParams = {}
-#for i in swaras:
-	#khamasParams[i]=[]
-	#kalyaniParams[i]=[]
-
 #swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^", "Sa^^", "R1^^", "R2/G1^^", "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]
 #swaras = ["Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^"]
 #others = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa^^", "R1^^", "R2/G1^^", "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]

@@ -1,0 +1,11 @@
+*.pyc
+*.pickle
+*~
+*.sig
+*.mp3
+*.wav
+*.MP3
+*.WAV
+*.txt
+*.arff
+

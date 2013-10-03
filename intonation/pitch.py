@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 from scipy.ndimage import median_filter
 import linearRegression as lR
@@ -116,14 +117,14 @@ class Pitch:
         if len(break_indices) == 0:
             t_pitch = self.pitch.reshape(len(self.pitch), 1)
             t_timestamps = self.timestamps.reshape(len(self.timestamps, 1))
-            data_blocks = [np.append(t_pitch, t_timestamps, axis=1)]
+            data_blocks = [np.append(t_timestamps, t_pitch, axis=1)]
         else:
             if break_indices[0, 0] != 0:
                 t_pitch = self.pitch[:break_indices[0, 0]]
                 t_pitch = t_pitch.reshape(len(t_pitch), 1)
                 t_timestamps = self.timestamps[:break_indices[0, 0]]
                 t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+                data_blocks.append(np.append(t_timestamps, t_pitch, axis=1))
             block_start = break_indices[0, 1]
             for i in xrange(1, len(break_indices)):
                 block_end = break_indices[i, 0]
@@ -131,14 +132,14 @@ class Pitch:
                 t_pitch = t_pitch.reshape(len(t_pitch), 1)
                 t_timestamps = self.timestamps[block_start:block_end]
                 t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+                data_blocks.append(np.append(t_timestamps, t_pitch, axis=1))
                 block_start = break_indices[i, 1]
             if block_start != len(self.pitch)-1:
                 t_pitch = self.pitch[block_start:]
                 t_pitch = t_pitch.reshape(len(t_pitch), 1)
                 t_timestamps = self.timestamps[block_start:]
                 t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+                data_blocks.append(np.append(t_timestamps, t_pitch, axis=1))
 
         label_start_offset = (window-hop)/2
         label_end_offset = label_start_offset+hop
@@ -151,6 +152,9 @@ class Pitch:
             while start_index < len(data)-1:
                 end_index = utils.find_nearest_index(data[:, 0], data[start_index][0]+window)
                 segment = data[start_index:end_index]
+                if len(segment) == 0:
+                    start_index = utils.find_nearest_index(data[:, 0], data[start_index, 0]+hop)
+                    continue
                 segment_clean = np.delete(segment, np.where(segment[:, 1] == -10000), axis=0)
                 if len(segment_clean) == 0:
                     #After splitting into blocks, this loop better not come into play

@@ -97,7 +97,6 @@ class Pitch:
         count = 0
         while i < len(self.pitch):
             if self.pitch[i] == -10000:
-                print count
                 count = 1
                 start_index = i
                 while i < len(self.pitch) and self.pitch[i] == -10000:
@@ -177,5 +176,4 @@ class Pitch:
 
                 start_index = utils.find_nearest_index(data[:, 0], data[start_index, 0]+hop)
 
-        self.timestamps = data_new[:, 0]
-        self.pitch = data_new[:, 1]
+        return [data_new[:, 0], data_new[:, 1]]

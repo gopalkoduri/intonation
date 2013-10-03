@@ -111,28 +111,34 @@ class Pitch:
         #In creating the data blocks which are not silences, note that we
         # take complimentary break indices. i.e., if [[s1, e1], [s2, e2] ...]
         # is break_indices, we take e1-s2, e2-s3 chunks and build data blocks
+
         data_blocks = []
-        if break_indices[0, 0] != 0:
-            t_pitch = self.pitch[:break_indices[0, 0]]
-            t_pitch = t_pitch.reshape(len(t_pitch), 1)
-            t_timestamps = self.timestamps[:break_indices[0, 0]]
-            t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-            data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
-        block_start = break_indices[0, 1]
-        for i in xrange(1, len(break_indices)):
-            block_end = break_indices[i, 0]
-            t_pitch = self.pitch[block_start:block_end]
-            t_pitch = t_pitch.reshape(len(t_pitch), 1)
-            t_timestamps = self.timestamps[block_start:block_end]
-            t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-            data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
-            block_start = break_indices[i, 1]
-        if block_start != len(self.pitch)-1:
-            t_pitch = self.pitch[block_start:]
-            t_pitch = t_pitch.reshape(len(t_pitch), 1)
-            t_timestamps = self.timestamps[block_start:]
-            t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
-            data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+        if len(break_indices) == 0:
+            t_pitch = self.pitch.reshape(len(self.pitch), 1)
+            t_timestamps = self.timestamps.reshape(len(self.timestamps, 1))
+            data_blocks = [np.append(t_pitch, t_timestamps, axis=1)]
+        else:
+            if break_indices[0, 0] != 0:
+                t_pitch = self.pitch[:break_indices[0, 0]]
+                t_pitch = t_pitch.reshape(len(t_pitch), 1)
+                t_timestamps = self.timestamps[:break_indices[0, 0]]
+                t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
+                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+            block_start = break_indices[0, 1]
+            for i in xrange(1, len(break_indices)):
+                block_end = break_indices[i, 0]
+                t_pitch = self.pitch[block_start:block_end]
+                t_pitch = t_pitch.reshape(len(t_pitch), 1)
+                t_timestamps = self.timestamps[block_start:block_end]
+                t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
+                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
+                block_start = break_indices[i, 1]
+            if block_start != len(self.pitch)-1:
+                t_pitch = self.pitch[block_start:]
+                t_pitch = t_pitch.reshape(len(t_pitch), 1)
+                t_timestamps = self.timestamps[block_start:]
+                t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
+                data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
 
         label_start_offset = (window-hop)/2
         label_end_offset = label_start_offset+hop

@@ -1,6 +1,6 @@
 from numpy import *
 import yaml
-from intonationLib import findNearestIndex
+from intonationLib import find_nearest_index
 
 allParameters = yaml.load(file("../data/allParameters-25-50.yaml"))
 param = "position"
@@ -39,12 +39,12 @@ for i in xrange(24):
 		Dj = 0
 		for val in peak:
 			De += abs(position-val)
-			Dj += abs(justRef[findNearestIndex(justRef, position)]-val)
+			Dj += abs(justRef[find_nearest_index(justRef, position)]-val)
 		De = round(De*1.0/len(peak), 2)
 		Dj = round(Dj*1.0/len(peak), 2)
 		#print "$"+swaraRef[findNearestIndex(justRef, position)]+"$", "&", _mean, "&", position-_mean, "&", justRef[findNearestIndex(justRef, position)]-_mean, "&", len(peak), "\\\\"
-		print "$"+swaraRef[findNearestIndex(justRef, position)]+"$", "&", _mean, "&", De, "&", Dj, "&", len(peak), "\\\\"
+		print "$"+swaraRef[find_nearest_index(justRef, position)]+"$", "&", _mean, "&", De, "&", Dj, "&", len(peak), "\\\\"
 		#print "\hline"
 		equi.append(position)
 		means.append(mean(peak))
-		just.append(justRef[findNearestIndex(justRef, position)])
+		just.append(justRef[find_nearest_index(justRef, position)])

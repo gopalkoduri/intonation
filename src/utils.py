@@ -243,8 +243,8 @@ def vocalFilter(data, mbid):
     try:
         vocalSegments = manualAnnotations['vocal']
         for segment in vocalSegments['segments']:
-            start = iL.findNearestIndex(data[:,0], segment['start'])
-            end = iL.findNearestIndex(data[:,0], segment['end'])
+            start = iL.find_nearest_index(data[:,0], segment['start'])
+            end = iL.find_nearest_index(data[:,0], segment['end'])
             if end > dataLen:
                 end = dataLen
             for i in xrange(start, end):
@@ -254,6 +254,59 @@ def vocalFilter(data, mbid):
         print "No annotated information of vocal segments found, returning the pitch unfiltered for", mbid
     data = zip(data[:, 0], vocalPitch) #assigning won't change the original array (passed to function)
     return np.array(data)
+
+def filepathByMBID(mbid, pathfile="/media/CompMusic/Carnatic/metadata/Carnatic.yaml"):
+    """
+    filepathByMBID(mbid, pathfile="/media/CompMusic/Carnatic/metadata/Carnatic.yaml")
+
+    Returns filepath of recording given by the mbid.
+    """
+    data = yaml.load(file(pathfile))
+    if mbid in data.keys():
+        return data[mbid]["path"]
+    else:
+        return None
+
+def recordingsByRaagaAliases(raaga, sim_thresh=0.7, recursion=2):
+    """
+    Obselete!
+    """
+    db = dao.DAO()
+    tags = db.getTagsByCategory("raaga")
+    raagas = [i["tag"] for i in tags[1]]
+    aliases = stringDuplicates(raaga, raagas, simThresh=sim_thresh, recursion=recursion)
+    recordings = {}
+    #recordings[mbid] = path
+
+    for alias in aliases:
+        data = db.getRecordingsByTag("tag", alias, category = "raaga")
+        if data[0]:
+            for i in xrange(len(data[1])):
+                uuid = data[1][i]['uuid']
+                #path = filepathByMBID(uuid)
+                recordings[uuid] = [alias]
+    return recordings
+
+def find_nearest_index(arr, value):
+    """For a given value, the function finds the nearest value
+    in the array and returns its index."""
+    arr = np.array(arr)
+    index=(np.abs(arr-value)).argmin()
+    return index
+
+
+def range_filter(arr, _min, _max, scale="cents"):
+    def _filter(x):
+        if _max >= x >= _min:
+            return x
+        else:
+            if scale == "cents":
+                return -10000
+            else:
+                return -1
+    res = [_filter(i) for i in arr]
+    return res
+
 
 # Functions to update taalaClusters
 

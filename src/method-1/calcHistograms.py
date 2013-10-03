@@ -24,7 +24,7 @@ for f in files:
 			continue
 		pitchFile = pitchDir+mbid+".txt"
 		try:
-			[n, binCenters, cents] = iL.computeHist(filepaths=[pitchFile])
+			[n, binCenters, cents] = iL.compute_hist(filepaths=[pitchFile])
 			pickle.dump([n, binCenters, cents], file(histogramsPath+"histograms/"+mbid+".pickle", "w"))
 		except:
 			f = file("bad.txt", "a")

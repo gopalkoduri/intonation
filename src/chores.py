@@ -79,7 +79,7 @@ from pylab import *
 
 raaga = yaml.load(file("../data/exp1/mukhari.yaml"))
 kpaths = ["../../features/pitch-yinjustin/"+i+".txt" for i in raaga.keys()]
-[kaln, kalbinCenters, kalcents] = iL.computeHist(kpaths[:8])
+[kaln, kalbinCenters, kalcents] = iL.compute_hist(kpaths[:8])
 kalnS = gaussian_filter(kaln, 5)
 refPeakInfo = iL.findPeaks(kalnS, kalbinCenters, smoothingFactor=5, lookahead=20, delta=0.00005, averageHist=True)
 
@@ -88,7 +88,7 @@ allbinCenters = []
 allnS = []
 
 for i in kpaths[:8]:
-	[n, binCenters, cents] = iL.computeHist([i])
+	[n, binCenters, cents] = iL.compute_hist([i])
 	alln.append(n)
 	allbinCenters.append(binCenters)
 	allnS.append(gaussian_filter(n, 5))

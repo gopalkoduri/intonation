@@ -55,7 +55,7 @@ def fitLines(mbid, window=1500, hop=500, breakThresh=1500):
         numSamples = len(data)
         startInd = 0
         while startInd < numSamples-1:
-            endInd = iL.findNearestIndex(data[:,0], data[startInd][0]+window)
+            endInd = iL.find_nearest_index(data[:,0], data[startInd][0]+window)
 
             segment = data[startInd:endInd]
             n = len(segment)
@@ -64,7 +64,7 @@ def fitLines(mbid, window=1500, hop=500, breakThresh=1500):
                 #After splitting into blocks, this loop should never come into
                 #action
                 print "Blocks does not seem to be well split!"
-                startInd = iL.findNearestIndex(data[:, 0], data[startInd, 0]+hop)
+                startInd = iL.find_nearest_index(data[:, 0], data[startInd, 0]+hop)
                 continue
             nClean = len(segmentClean)
             XClean = np.matrix(segmentClean[:, 0]).reshape(nClean, 1)
@@ -72,9 +72,9 @@ def fitLines(mbid, window=1500, hop=500, breakThresh=1500):
             theta = lR.normalEquation(XClean, yClean)
 
             #determine the start and end of the segment to be labelled
-            labelStartInd = iL.findNearestIndex(XClean,\
+            labelStartInd = iL.find_nearest_index(XClean,\
                                                 data[startInd, 0]+labelOffsetStart)
-            labelEndInd = iL.findNearestIndex(XClean,\
+            labelEndInd = iL.find_nearest_index(XClean,\
                                                 data[startInd, 0]+labelOffsetEnd)
             XClean = XClean[labelStartInd:labelEndInd]
             nClean = len(XClean)
@@ -87,7 +87,7 @@ def fitLines(mbid, window=1500, hop=500, breakThresh=1500):
             result = np.array([XClean, newy]).T
             dataNew = np.append(dataNew, result, axis=0)
 
-            startInd = iL.findNearestIndex(data[:, 0], data[startInd, 0]+hop)
+            startInd = iL.find_nearest_index(data[:, 0], data[startInd, 0]+hop)
 
     return dataNew
 

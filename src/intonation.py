@@ -1,15 +1,19 @@
-from pypeaks import Data, Intervals
+from __future__ import division
+from pypeaks import Data
+from scipy.stats import variation, skew, kurtosis
 from pitch import Pitch
-
+import utils
 import numpy as np
-
 #TODO: Vocal filter
+
 
 class Intonation:
     def __init__(self, pitch_obj):
         assert isinstance(self.pitch_obj, Pitch)
         self.pitch_obj = pitch_obj
         self.histogram = None
+        self.intonation_profile = None
+        self.contour_labels = None
 
     def compute_hist(self, bins=None, density=True, folded=False, weight="duration",
                      intervals=None):
@@ -22,8 +26,10 @@ class Intonation:
         automatically.
         :param density: defaults to True, which means the histogram will be a normalized one.
         :param folded: defaults to False. When set to True, all the octaves are folded to one.
-        :param weight: It can be one of the 'duration' or 'instance'. In the latter case, the
-        number of bins must be stated, and they should match with the Interval object passed.
+        :param weight: It can be one of the 'duration' or 'instance'. In the latter case, make
+        sure that the pitch object has the pitch values discretized, and the
+        intervals argument must be passed.
+        :param intervals: an array of intervals.
         """
         #Step 1: get the right pitch values
         assert isinstance(self.pitch_obj.pitch, np.ndarray)
@@ -32,211 +38,173 @@ class Intonation:
         if folded:
             valid_pitch = map(lambda x: int(x % 1200), valid_pitch)
 
-        #Step 2: set the number of bins (if not passed)
-        if not bins:
-            bins = max(valid_pitch) - min(valid_pitch)
-
-        #Step 3: based on the weighing scheme, compute the histogram
+        #Step 2: based on the weighing scheme, compute the histogram
         if weight == "duration":
+            #Step 2.1 set the number of bins (if not passed)
+            if not bins:
+                bins = max(valid_pitch) - min(valid_pitch)
             n, bin_edges = np.histogram(valid_pitch, bins, density=density)
             bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-            
+            self.histogram = Data(bin_centers, n)
         elif weight == "instance":
-            if bins != 12:
-                print "Quantization with bins != 12 is not handled. Quitting."
-                exit()
             n = {}
             i = 1
-            while (i < len(valid_pitch) - 1):
-                if (valid_pitch[i] - valid_pitch[i - 1] != 0) and (valid_pitch[i + 1] - valid_pitch[i] == 0):
-                    flag = 0
-                    for val in xrange(valid_pitch[i] - 3, valid_pitch[i] + 3, 1):
-                        if val in n.keys():
-                            n[val] += 1
-                            flag = 1
-                            break
-                    if flag == 0:
-                        n[valid_pitch[i]] = 1
+            while i < len(valid_pitch) - 1:
+                if (valid_pitch[i] - valid_pitch[i - 1] != 0) and \
+                        (valid_pitch[i + 1] - valid_pitch[i] == 0):
+                    #TODO: Do we need the intervals?? Remove them arguments if not necessary
+                    #TODO: the following code needs to be removed if discritization works
+                    # properly. If it doesn't there will be values like 1198.5, 1200, 1203.8
+                    # etc.. for each interval, in which case we need this block.
+                    #flag = 0
+                    #for val in xrange(valid_pitch[i] - 3, valid_pitch[i] + 3, 1):
+                    #    if val in n.keys():
+                    #        n[val] += 1
+                    #        flag = 1
+                    #        break
+                    #if flag == 0:
+                    n[valid_pitch[i]] = 1
                 i += 1
             n = n.items()
             n.sort(key=lambda x: x[0])
             n = np.array(n)
-            m = []
-            _sum = sum(n[:, 1])
-            for i in n[:, 1]:
-                m.append(1.0 * i / _sum)
-            return [np.array(m), n[:, 0], valid_pitch]
 
-    def characterizePeaks(peaks, valleys, cents, maxDistribThresh=50, minDistribThresh=25):
-        """Given peaks and cent values, it returns the characteristics
-        of each peak."""
-        justIntonation = [['Sa', 1.0], ['R1', 16.0 / 15.0], ['R2/G1', 9.0 / 8.0], \
-                          ['G2/R3', 6.0 / 5.0], ['G3', 5.0 / 4.0], ['M1', 4.0 / 3.0], ['M2', 64.0 / 45.0], \
-                          ['P', 3.0 / 2.0], ['D1', 8.0 / 5.0], ['D2/N1', 5.0 / 3.0], \
-                          ['D3/N2', 16.0 / 9.0], ['N3', 15.0 / 8.0]]
-        swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa",
-                  "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^",
-                  "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^", "Sa^^", "R1^^", "R2/G1^^",
-                  "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]
-        JICents = []
-        for interval in justIntonation:
-            p = round(1200.0 * np.log2(interval[1]), 2)
-            JICents.append(p)
-            JICents.append(p - 1200)
-            JICents.append(p + 1200)
-            JICents.append(p + 2400)
+            median_diff = np.median(np.diff(n[:, 1]))
+            bin_edges = [n[0, 1] - median_diff/2]
+            bin_edges.extend(median_diff/2 + n[:, 1])
+            n[:, 1] = n[:, 1]/(n[:, 1].sum()*np.diff(bin_edges))
+            self.histogram = Data(n[:, 0], n[:, 1])
 
-        JICents.sort()
-        cents = np.array(cents)
+    def parametrize_peaks(self, intervals, max_peakwidth=50, min_peakwidth=25, symmetric_bounds=True):
+        """
+        Computes and stores the intonation profile of an audio recording.
+
+        :param intervals: these will be the reference set of intervals to which peak positions
+         correspond to. For each interval, the properties of corresponding peak, if exists,
+         will be computed and stored as intonation profile.
+        :param max_peakwidth: the maximum allowed width of the peak at the base for computing
+        parameters of the distribution.
+        :param min_peakwidth: the minimum allowed width of the peak at the base for computing
+        parameters of the distribution.
+        """
+        assert isinstance(self.pitch_obj.pitch, np.ndarray)
+        valid_pitch = self.pitch_obj.pitch
+        valid_pitch = [i for i in valid_pitch if i > -10000]
+
         parameters = {}
-        for i in xrange(len(peaks[0])):
-            p = peaks[0][i]
+        for i in xrange(len(self.histogram.peaks["peaks"][0])):
+            peak_pos = self.histogram.peaks["peaks"][0][i]
             #Set left and right bounds of the distribution.
-            leftBoundMax = p - maxDistribThresh
-            rightBoundMax = p + maxDistribThresh
-            leftBound = leftBoundMax
-            rightBound = rightBoundMax
-            nearestValleyIndex = find_nearest_index(valleys[0], p)
-            if p > valleys[0][nearestValleyIndex]:
-                leftBound = valleys[0][nearestValleyIndex]
-                if len(valleys[0][nearestValleyIndex + 1:]) == 0:
-                    rightBound = p + maxDistribThresh
+            max_leftbound = peak_pos - max_peakwidth
+            max_rightbound = peak_pos + max_peakwidth
+            leftbound = max_leftbound
+            rightbound = max_rightbound
+            nearest_valleyindex = utils.find_nearest_index(self.histogram.peaks["valleys"][0], peak_pos)
+            if peak_pos > self.histogram.peaks["valleys"][0][nearest_valleyindex]:
+                leftbound = self.histogram.peaks["valleys"][0][nearest_valleyindex]
+                if len(self.histogram.peaks["valleys"][0][nearest_valleyindex + 1:]) == 0:
+                    rightbound = peak_pos + max_peakwidth
                 else:
-                    offset = nearestValleyIndex + 1
-                    nearestValleyIndex = find_nearest_index(valleys[0][offset:], p)
-                    rightBound = valleys[0][offset + nearestValleyIndex]
+                    offset = nearest_valleyindex + 1
+                    nearest_valleyindex = utils.find_nearest_index(
+                        self.histogram.peaks["valleys"][0][offset:], peak_pos)
+                    rightbound = self.histogram.peaks["valleys"][0][offset + nearest_valleyindex]
             else:
-                rightBound = valleys[0][nearestValleyIndex]
-                if len(valleys[0][:nearestValleyIndex]) == 0:
-                    leftBound = p - maxDistribThresh
+                rightbound = self.histogram.peaks["valleys"][0][nearest_valleyindex]
+                if len(self.histogram.peaks["valleys"][0][:nearest_valleyindex]) == 0:
+                    leftbound = peak_pos - max_peakwidth
                 else:
-                    nearestValleyIndex = find_nearest_index(valleys[0][:nearestValleyIndex], p)
-                    leftBound = valleys[0][nearestValleyIndex]
+                    nearest_valleyindex = utils.find_nearest_index(
+                        self.histogram.peaks["valleys"][0][:nearest_valleyindex], peak_pos)
+                    leftbound = self.histogram.peaks["valleys"][0][nearest_valleyindex]
 
-            #Think in terms of x-axis.
-            #leftBound should be at least minDistribThresh less than p, and at max maxDistribThresh less than p
-            #rightBound should be at least minDistribThresh greater than p, and at max maxDistribThresh greater than p
-            if leftBound < leftBoundMax:
-                leftBound = leftBoundMax
-            elif leftBound > p - minDistribThresh:
-                leftBound = p - minDistribThresh
+            #In terms of x-axis, leftbound should be at least min_peakwidth
+            # less than peak_pos, and at max max_peakwidth less than peak_pos,
+            # and viceversa for the rightbound.
+            if leftbound < max_leftbound:
+                leftbound = max_leftbound
+            elif leftbound > peak_pos - min_peakwidth:
+                leftbound = peak_pos - min_peakwidth
 
-            if rightBound > rightBoundMax:
-                rightBound = rightBoundMax
-            elif rightBound < p + minDistribThresh:
-                rightBound = p + minDistribThresh
+            if rightbound > max_rightbound:
+                rightbound = max_rightbound
+            elif rightbound < peak_pos + min_peakwidth:
+                rightbound = peak_pos + min_peakwidth
 
-            #Bounds should be at equal distance on either side. If they are not, make them.
-            newThresh = 0
-            if p - leftBound < rightBound - p:
-                newThresh = p - leftBound
-            else:
-                newThresh = rightBound - p
-            leftBound = p - newThresh
-            rightBound = p + newThresh
+            #If symmetric bounds are asked for, then make the bounds symmetric
+            if symmetric_bounds:
+                if peak_pos - leftbound < rightbound - peak_pos:
+                    imbalance = (rightbound - peak_pos) - (peak_pos - leftbound)
+                    rightbound -= imbalance
+                else:
+                    imbalance = (peak_pos - leftbound) - (rightbound - peak_pos)
+                    leftbound += imbalance
 
             #extract the distribution and estimate the parameters
-            distribution = cents[cents >= leftBound]
-            distribution = distribution[distribution <= rightBound]
-            #print p, "\t", len(distribution), "\t", leftBound, "\t", rightBound
-            swaraIndex = find_nearest_index(JICents, p)
-            swara = swaras[swaraIndex]
+            distribution = valid_pitch[valid_pitch >= leftbound]
+            distribution = distribution[distribution <= rightbound]
+            print peak_pos, "\t", len(distribution), "\t", leftbound, "\t", rightbound
+
+            interval_index = utils.find_nearest_index(intervals, peak_pos)
+            interval = intervals[interval_index]
             _mean = float(np.mean(distribution))
             _variance = float(variation(distribution))
             _skew = float(skew(distribution))
             _kurtosis = float(kurtosis(distribution))
-            pearsonSkew = float(3.0 * (_mean - p) / np.sqrt(abs(_variance)))
-            parameters[swara] = {"position": float(p), "mean": _mean, "variance": _variance, "skew1": _skew,
-                                 "kurtosis": _kurtosis, "amplitude": float(peaks[1][i]), "skew2": pearsonSkew}
-        return parameters
+            pearson_skew = float(3.0 * (_mean - peak_pos) / np.sqrt(abs(_variance)))
+            parameters[interval] = {"position": float(peak_pos),
+                                    "mean": _mean,
+                                    "amplitude": float(self.histogram.peaks[1][i]),
+                                    "variance": _variance,
+                                    "skew1": _skew,
+                                    "skew2": pearson_skew,
+                                    "kurtosis": _kurtosis}
 
-    def computeParameters(mbids, smoothingFactor=11,
-                          histogramsPath="/media/CompMusic/audio/users/gkoduri/Workspace/intonationLib/data/method-1/vocal-histograms/",
-                          pitchPath="/media/CompMusic/audio/users/gkoduri/Workspace/features/pitch/"):
-        """This is a wrapper function to bulk calculate parameters for a
-        large number of files (run for one raaga at a time)"""
+        self.intonation_profile = parameters
 
-        allParams = {}
-        for mbid in mbids:
-            print mbid
-            path = histogramsPath + mbid + ".pickle"
-            if not exists(path):
-                [n, binCenters, cents] = computeHist([pitchPath + mbid + ".txt"])
-            else:
-                [n, binCenters, cents] = pickle.load(file(path))
-            n = gaussian_filter(n, smoothingFactor)
-            peakInfo = peaks.peaks(n, binCenters, method="hybrid", window=100, peakAmpThresh=0.00005,
-                                   valleyThresh=0.00003)
-            params = characterizePeaks(peakInfo["peaks"], peakInfo["valleys"], cents, maxDistribThresh=50,
-                                       minDistribThresh=20)
-            allParams[mbid] = params
-        return allParams
-
-    # Functions for mean-window approach
-
-    def isolateSwaras(data, windowSize=150, hopSize=30):
+    def label_contours(self, intervals, window=150, hop=30):
         """
-        data: mx2 array with time and pitch value in cents as columns.
-        windowSize: the size of window over which means are calculated in
-        milliseconds.
-        hopSize : hop size in milliseconds.
+        In a very flowy contour, it is not trivial to say which pitch value corresponds
+         to what interval. This function labels pitch contours with intervals by guessing
+         from the characteristics of the contour and its melodic context.
 
-        returns a dictionary swaraDistributions with swaras as keys and an array of
-        corresponding pitches as values.
+        :param window: the size of window over which the context is gauged, in milliseconds.
+        :param hop: hop size in milliseconds.
         """
-        windowSize = windowSize / 1000.0
-        hopSize = hopSize / 1000.0
-        exposure = int(windowSize / hopSize)
-        boundary = windowSize - hopSize
-        finaleInd = find_nearest_index(data[:, 0], data[-1, 0] - boundary)
+        window /= 1000.0
+        hop /= 1000.0
+        exposure = int(window / hop)
 
-        justIntonation = [['Sa', 1.0], ['R1', 16.0 / 15.0], ['R2/G1', 9.0 / 8.0], \
-                          ['G2/R3', 6.0 / 5.0], ['G3', 5.0 / 4.0], ['M1', 4.0 / 3.0], ['M2', 64.0 / 45.0], \
-                          ['P', 3.0 / 2.0], ['D1', 8.0 / 5.0], ['D2/N1', 5.0 / 3.0], \
-                          ['D3/N2', 16.0 / 9.0], ['N3', 15.0 / 8.0]]
-        swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa",
-                  "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^",
-                  "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^"]
-        #swaras = ["Sa_", "R1_", "R2/G1_", "G2/R3_", "G3_", "M1_", "M2_", "P_", "D1_", "D2/N1_", "D3/N2_", "N3_", "Sa", "R1", "R2/G1", "G2/R3", "G3", "M1", "M2", "P", "D1", "D2/N1", "D3/N2", "N3", "Sa^", "R1^", "R2/G1^", "G2/R3^", "G3^", "M1^", "M2^", "P^", "D1^", "D2/N1^", "D3/N2^", "N3^", "Sa^^", "R1^^", "R2/G1^^", "G2/R3^^", "G3^^", "M1^^", "M2^^", "P^^", "D1^^", "D2/N1^^", "D3/N2^^", "N3^^"]
-        JICents = []
-        for interval in justIntonation:
-            p = int(1200.0 * np.log2(interval[1]))
-            JICents.append(p)
-            JICents.append(p - 1200)
-            JICents.append(p + 1200)
-            #JICents.append(p+2400)
-        JICents.sort()
+        boundary = window - hop
+        final_index = utils.find_nearest_index(self.pitch_obj.timestamps,
+                                               self.pitch_obj.timestamps[-1] - boundary)
 
-        startInd = 0
-        #HARDCODED
-        interval = 0.00290254832393
-        windowStep = windowSize / interval
-        hopStep = hopSize / interval
-        endInd = windowStep
-        swaraDistributions = {}
-        _means = []
-        while endInd < finaleInd:
-            temp = data[startInd:endInd, 1][data[startInd:endInd, 1] > -10000]
-            _means.append(np.mean(temp))
-            startInd = startInd + hopStep
-            endInd = startInd + windowStep
+        interval = np.median(np.diff(self.pitch_obj.timestamps))
+        #interval = 0.00290254832393
+        window_step = window / interval
+        hop_step = hop / interval
+        start_index = 0
+        end_index = window_step
+        contour_labels = {}
+        means = []
+        while end_index < final_index:
+            temp = self.pitch_obj.pitch[start_index:end_index][self.pitch_obj.pitch[start_index:end_index] > -10000]
+            means.append(np.mean(temp))
+            start_index = start_index + hop_step
+            end_index = start_index + window_step
 
-        for i in xrange(exposure, len(_means) - exposure + 1):
-            _median = np.median(_means[i - exposure:i])
-            if _median < -5000: continue
-            ind = find_nearest_index(_median, JICents)
-            sliceEnd = (i - exposure) * hopStep + windowStep
-            sliceBegin = sliceEnd - hopStep
+        for i in xrange(exposure, len(means) - exposure + 1):
+            _median = np.median(means[i - exposure:i])
+            if _median < -5000:
+                continue
+            ind = utils.find_nearest_index(_median, intervals)
+            contour_start = (i - exposure) * hop_step + window_step
+            contour_end = contour_start - hop_step
             #print sliceBegin, sliceEnd, JICents[ind]
             #newPitch[sliceBegin:sliceEnd] = JICents[ind]
-            if swaras[ind] in swaraDistributions.keys():
-                swaraDistributions[swaras[ind]] = np.append(swaraDistributions[swaras[ind]],
-                                                            data[sliceBegin:sliceEnd, 1])
+            if intervals[ind] in contour_labels.keys():
+                contour_labels[intervals[ind]].append([contour_start, contour_end])
             else:
-                swaraDistributions[swaras[ind]] = data[sliceBegin:sliceEnd, 1]
+                contour_labels[intervals[ind]] = [[contour_start, contour_end]]
 
-        for swara in swaraDistributions.keys():
-            swaraDistributions[swara] = swaraDistributions[swara][swaraDistributions[swara] > -10000]
-        return swaraDistributions
-
-        #Plotting functions
+        self.contour_labels = contour_labels

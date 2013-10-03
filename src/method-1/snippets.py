@@ -60,7 +60,7 @@ for i in mbids:
 	print count
 	count += 1
 	data = iL.pitch(i, vocal=True)
-	sDs = iL.isolateSwaras(data)
+	sDs = iL.label_contours(data)
 	swaraDistributions[i] = sDs
 	
 for f in listdir("."):

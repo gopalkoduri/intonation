@@ -380,6 +380,30 @@ def updateTaalaClusters(taalaClusters, newterms = [], mbids = [], simThresh=0.6)
 
     return taalaClusters
 
+
+def computeParameters(mbids, smoothingFactor=11,
+                      histogramsPath="/media/CompMusic/audio/users/gkoduri/Workspace/intonationLib/data/method-1/vocal-histograms/",
+                      pitchPath="/media/CompMusic/audio/users/gkoduri/Workspace/features/pitch/"):
+    """This is a wrapper function to bulk calculate parameters for a
+        large number of files (run for one raaga at a time)"""
+
+    allParams = {}
+    for mbid in mbids:
+        print mbid
+        path = histogramsPath + mbid + ".pickle"
+        if not exists(path):
+            [n, binCenters, cents] = computeHist([pitchPath + mbid + ".txt"])
+        else:
+            [n, binCenters, cents] = pickle.load(file(path))
+        n = gaussian_filter(n, smoothingFactor)
+        peakInfo = peaks.peaks(n, binCenters, method="hybrid", window=100, peakAmpThresh=0.00005,
+                               valleyThresh=0.00003)
+        params = characterize_peaks(peakInfo["peaks"], peakInfo["valleys"], cents, maxDistribThresh=50,
+                                   minDistribThresh=20)
+        allParams[mbid] = params
+    return allParams
+
+
 import sys
 if __name__=="__main__":
     taalas = yaml.load(file(sys.argv[1]))

@@ -7,7 +7,11 @@ import utils
 class Pitch:
     def __init__(self, timestamps, pitch):
         self.timestamps = timestamps
+        self.pitch_raw = pitch
         self.pitch = pitch
+
+    def reset(self):
+        self.pitch = self.pitch_raw
 
     def discretize(self, intervals, slope_thresh=1500, cents_thresh=50):
         """
@@ -72,18 +76,18 @@ class Pitch:
                 self.pitch[i] = -10000
                 i += 1
 
-    def fit_lines(self, window=1500, hop=500, break_thresh=1500):
+    def fit_lines(self, window=1500, break_thresh=1500):
         """
         Fits lines to pitch contours.
 
-        :param window: size of each chunk to which linear equation is to be fit (in milliseconds)
-        :param hop: hop size in milliseconds, such that it is
+        :param window: size of each chunk to which linear equation is to be fit (in milliseconds).
+        To keep it simple, hop is chosen to be one third of the window.
         :param break_thresh: If there is silence beyond this limit (in milliseconds),
         the contour will be broken there into two so that we don't fit a line over and
         including the silent region.
         """
         window /= 1000
-        hop /= 1000
+        hop = window/3
         break_thresh /= 1000
 
         #cut the whole song into pieces if there are gaps more than break_thresh seconds
@@ -128,8 +132,8 @@ class Pitch:
             t_timestamps = t_timestamps.reshape(len(t_timestamps), 1)
             data_blocks.append(np.append(t_pitch, t_timestamps, axis=1))
 
-        labelOffsetStart = (window-hop)/2
-        labelOffsetEnd = labelOffsetStart+hop
+        label_start_offset = (window-hop)/2
+        label_end_offset = label_start_offset+hop
 
         #dataNew = np.zeros_like(data)
         #dataNew[:, 0] = data[:, 0]
@@ -151,20 +155,15 @@ class Pitch:
                 theta = lR.normalEquation(x_clean, y_clean)
 
                 #determine the start and end of the segment to be labelled
-                labelStartInd = utils.find_nearest_index(x_clean, data[start_index, 0]+labelOffsetStart)
-                labelEndInd = utils.find_nearest_index(x_clean, data[start_index, 0]+labelOffsetEnd)
-                x_clean = x_clean[labelStartInd:labelEndInd]
-                n_clean = len(x_clean)
-                X = np.insert(x_clean, 0, np.ones(n_clean), axis=1)
-
+                label_start_index = utils.find_nearest_index(x_clean, data[start_index, 0]+label_start_offset)
+                label_end_index = utils.find_nearest_index(x_clean, data[start_index, 0]+label_end_offset)
+                x_clean = x_clean[label_start_index:label_end_index]
                 x_clean = x_clean.reshape(1, x_clean.size).A[0]
-                #newy = X*theta
-                #newy = newy.reshape(1, newy.size).A[0]
                 newy = [theta[1]]*len(x_clean)
                 result = np.array([x_clean, newy]).T
                 data_new = np.append(data_new, result, axis=0)
 
                 start_index = utils.find_nearest_index(data[:, 0], data[start_index, 0]+hop)
 
-        return data_new
-
+        self.timestamps = data_new[:, 0]
+        self.pitch = data_new[:, 1]

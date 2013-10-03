@@ -1,4 +1,5 @@
 from __future__ import division
+import pickle
 from pypeaks import Data
 from scipy.stats import variation, skew, kurtosis
 from pitch import Pitch
@@ -7,13 +8,22 @@ import numpy as np
 #TODO: Vocal filter
 
 
-class Intonation:
+class Recording:
     def __init__(self, pitch_obj):
         assert isinstance(self.pitch_obj, Pitch)
         self.pitch_obj = pitch_obj
         self.histogram = None
         self.intonation_profile = None
         self.contour_labels = None
+
+    def serialize_hist(self, path):
+        pickle.dump(self.histogram, file(path, 'w'))
+
+    def serialize_intonation(self, path):
+        pickle.dump(self.intonation_profile, file(path, 'w'))
+
+    def serialize_contour_labels(self, path):
+        pickle.dump(self.contour_labels, file(path, 'w'))
 
     def compute_hist(self, bins=None, density=True, folded=False, weight="duration",
                      intervals=None):

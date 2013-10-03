@@ -93,8 +93,10 @@ class Pitch:
         #cut the whole song into pieces if there are gaps more than break_thresh seconds
         i = 0
         break_indices = []
+        count = 0
         while i < len(self.pitch):
             if self.pitch[i] == -10000:
+                print count
                 count = 1
                 start_index = i
                 while i < len(self.pitch) and self.pitch[i] == -10000:

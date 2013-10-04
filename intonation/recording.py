@@ -5,13 +5,15 @@ from scipy.stats import variation, skew, kurtosis
 from pitch import Pitch
 import utils
 import numpy as np
-#TODO: Vocal filter
+import pylab as p
+
+#TODO: Vocal filter after segmentation is done
 
 
 class Recording:
     def __init__(self, pitch_obj):
-        assert isinstance(self.pitch_obj, Pitch)
         self.pitch_obj = pitch_obj
+        assert isinstance(self.pitch_obj, Pitch)
         self.histogram = None
         self.intonation_profile = None
         self.contour_labels = None
@@ -25,8 +27,7 @@ class Recording:
     def serialize_contour_labels(self, path):
         pickle.dump(self.contour_labels, file(path, 'w'))
 
-    def compute_hist(self, bins=None, density=True, folded=False, weight="duration",
-                     intervals=None):
+    def compute_hist(self, bins=None, density=True, folded=False, weight="duration"):
         """
         Computes histogram from the pitch data in Pitch object (pitch), and creates
         a Data object (pypeaks).
@@ -37,9 +38,7 @@ class Recording:
         :param density: defaults to True, which means the histogram will be a normalized one.
         :param folded: defaults to False. When set to True, all the octaves are folded to one.
         :param weight: It can be one of the 'duration' or 'instance'. In the latter case, make
-        sure that the pitch object has the pitch values discretized, and the
-        intervals argument must be passed.
-        :param intervals: an array of intervals.
+        sure that the pitch object has the pitch values discretized.
         """
         #Step 1: get the right pitch values
         assert isinstance(self.pitch_obj.pitch, np.ndarray)
@@ -62,28 +61,21 @@ class Recording:
             while i < len(valid_pitch) - 1:
                 if (valid_pitch[i] - valid_pitch[i - 1] != 0) and \
                         (valid_pitch[i + 1] - valid_pitch[i] == 0):
-                    #TODO: Do we need the intervals?? Remove them arguments if not necessary
-                    #TODO: the following code needs to be removed if discritization works
-                    # properly. If it doesn't there will be values like 1198.5, 1200, 1203.8
-                    # etc.. for each interval, in which case we need this block.
-                    #flag = 0
-                    #for val in xrange(valid_pitch[i] - 3, valid_pitch[i] + 3, 1):
-                    #    if val in n.keys():
-                    #        n[val] += 1
-                    #        flag = 1
-                    #        break
-                    #if flag == 0:
-                    n[valid_pitch[i]] = 1
+                    if valid_pitch[i] in n.keys():
+                        n[valid_pitch[i]] += 1
+                    else:
+                        n[valid_pitch[i]] = 1
                 i += 1
             n = n.items()
             n.sort(key=lambda x: x[0])
             n = np.array(n)
-
-            median_diff = np.median(np.diff(n[:, 1]))
-            bin_edges = [n[0, 1] - median_diff/2]
-            bin_edges.extend(median_diff/2 + n[:, 1])
-            n[:, 1] = n[:, 1]/(n[:, 1].sum()*np.diff(bin_edges))
             self.histogram = Data(n[:, 0], n[:, 1])
+
+            median_diff = np.median(np.diff(n[:, 0]))
+            bin_edges = [n[0, 0] - median_diff/2]
+            bin_edges.extend(median_diff/2 + n[:, 0])
+            n[:, 1] = n[:, 1]/(n[:, 1].sum()*np.diff(bin_edges))
+            self.histogram = Data(n[:, 0], n[:, 1], default_smooth=False)
 
     def parametrize_peaks(self, intervals, max_peakwidth=50, min_peakwidth=25, symmetric_bounds=True):
         """
@@ -100,6 +92,7 @@ class Recording:
         assert isinstance(self.pitch_obj.pitch, np.ndarray)
         valid_pitch = self.pitch_obj.pitch
         valid_pitch = [i for i in valid_pitch if i > -10000]
+        valid_pitch = np.array(valid_pitch)
 
         parameters = {}
         for i in xrange(len(self.histogram.peaks["peaks"][0])):
@@ -164,7 +157,7 @@ class Recording:
             pearson_skew = float(3.0 * (_mean - peak_pos) / np.sqrt(abs(_variance)))
             parameters[interval] = {"position": float(peak_pos),
                                     "mean": _mean,
-                                    "amplitude": float(self.histogram.peaks[1][i]),
+                                    "amplitude": float(self.histogram.peaks["peaks"][1][i]),
                                     "variance": _variance,
                                     "skew1": _skew,
                                     "skew2": pearson_skew,
@@ -208,8 +201,8 @@ class Recording:
             if _median < -5000:
                 continue
             ind = utils.find_nearest_index(_median, intervals)
-            contour_start = (i - exposure) * hop_step + window_step
-            contour_end = contour_start - hop_step
+            contour_end = (i - exposure) * hop_step + window_step
+            contour_start = contour_end - hop_step
             #print sliceBegin, sliceEnd, JICents[ind]
             #newPitch[sliceBegin:sliceEnd] = JICents[ind]
             if intervals[ind] in contour_labels.keys():
@@ -218,3 +211,23 @@ class Recording:
                 contour_labels[intervals[ind]] = [[contour_start, contour_end]]
 
         self.contour_labels = contour_labels
+
+    def plot_contour_labels(self, new_fig=True):
+        """
+        Plots the labelled contours!
+        """
+        timestamps = []
+        pitch = []
+
+        if new_fig:
+            p.figure()
+        for interval, contours in self.contour_labels.items():
+            for contour in contours:
+                x = self.pitch_obj.timestamps[contour[0]:contour[1]]
+                y = [interval]*len(x)
+                timestamps.extend(x)
+                pitch.extend(y)
+
+        data = np.array([timestamps, pitch]).T
+        data = np.array(sorted(data, key=lambda xx: xx[0]))
+        p.plot(data[:, 0], data[:, 1], 'g-')

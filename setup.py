@@ -6,7 +6,7 @@ def readme():
 
 setup(name='pypeaks',
       version='0.1',
-      description='Python module to analyze, study and research the intonation, requires=['numpy']
+      description='Python module to analyze, study and research the intonation, requires=[', requires=['scipy', 'numpy']numpy']
       of various intervals in different music traditions around the world',
       long_description=readme(),
       classifiers=[

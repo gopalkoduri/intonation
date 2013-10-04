@@ -115,7 +115,7 @@ class Pitch:
         data_blocks = []
         if len(break_indices) == 0:
             t_pitch = self.pitch.reshape(len(self.pitch), 1)
-            t_timestamps = self.timestamps.reshape(len(self.timestamps, 1))
+            t_timestamps = self.timestamps.reshape(len(self.timestamps), 1)
             data_blocks = [np.append(t_timestamps, t_pitch, axis=1)]
         else:
             if break_indices[0, 0] != 0:
@@ -163,15 +163,17 @@ class Pitch:
                 n_clean = len(segment_clean)
                 x_clean = np.matrix(segment_clean[:, 0]).reshape(n_clean, 1)
                 y_clean = np.matrix(segment_clean[:, 1]).reshape(n_clean, 1)
+                #return [x_clean, y_clean]
                 theta = lR.normalEquation(x_clean, y_clean)
 
                 #determine the start and end of the segment to be labelled
                 label_start_index = utils.find_nearest_index(x_clean, data[start_index, 0]+label_start_offset)
                 label_end_index = utils.find_nearest_index(x_clean, data[start_index, 0]+label_end_offset)
                 x_clean = x_clean[label_start_index:label_end_index]
-                x_clean = x_clean.reshape(1, x_clean.size).A[0]
-                newy = [theta[1]]*len(x_clean)
-                result = np.array([x_clean, newy]).T
+                #return x_clean
+                x_clean = np.insert(x_clean, 0, np.ones(len(x_clean)), axis=1)
+                newy = x_clean*theta
+                result = np.append(x_clean[:, 1], newy, axis=1)
                 data_new = np.append(data_new, result, axis=0)
 
                 start_index = utils.find_nearest_index(data[:, 0], data[start_index, 0]+hop)

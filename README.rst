@@ -8,7 +8,7 @@ Homepage:
 The intonation python module has broadly four classes:
 
 -  **Intervals**: defines an object which has a set of intervals, of
-   course! It has basic functions that facilitate the easy access to
+   course! It has a set of basic functions that facilitate an easy access to
    these intervals.
 -  **Histogram**: defines a histogram object with methods used to find
    peaks using different methods and plot them.
@@ -16,7 +16,7 @@ The intonation python module has broadly four classes:
    cents, it defines a pitch object which has a number of methods which
    can be used to study the intervals
 -  **Recording**: Given a pitch object, it defines a recording object
-   which has methods to computer histogram, intonation profile and label
+   which has methods to compute histogram, intonation profile and label
    sections of pitch contours with given set of intervals.
 
 

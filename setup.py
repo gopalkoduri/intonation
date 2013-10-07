@@ -4,7 +4,7 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
-setup(name='pypeaks',
+setup(name='intonation',
       version='0.1',
       description='Python module to analyze, study and research the intonation of musical intervals in music recordings.', requires=['scipy', 'numpy', 'pypeaks'],
       long_description=readme(),

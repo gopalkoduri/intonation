@@ -70,7 +70,7 @@ Have a look at the data!
 
 
 
-.. image:: intonation/examples/howto_files/howto_5_1.png
+.. image:: https://raw.github.com/gopalkoduri/intonation/master/intonation/examples/howto_files/howto_5_1.png
 
 
 Load the data into a pitch object
@@ -207,7 +207,7 @@ Compute intonation profile
         print "\n\n"
 
 
-.. image:: intonation/examples/howto_files/howto_11_0.png
+.. image:: https://raw.github.com/gopalkoduri/intonation/master/intonation/examples/howto_files/howto_11_0.png
 
 
 .. parsed-literal::

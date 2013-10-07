@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
 from scipy.ndimage import median_filter
-import linearRegression as lR
 import utils
 
 
@@ -164,7 +163,7 @@ class Pitch:
                 x_clean = np.matrix(segment_clean[:, 0]).reshape(n_clean, 1)
                 y_clean = np.matrix(segment_clean[:, 1]).reshape(n_clean, 1)
                 #return [x_clean, y_clean]
-                theta = lR.normalEquation(x_clean, y_clean)
+                theta = utils.normal_equation(x_clean, y_clean)
 
                 #determine the start and end of the segment to be labelled
                 label_start_index = utils.find_nearest_index(x_clean, data[start_index, 0]+label_start_offset)

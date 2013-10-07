@@ -17,6 +17,7 @@
 # <codecell>
 
 %pylab inline
+pylab.rcParams['figure.figsize'] = 12, 8
 
 import intonation
 print dir(intonation)

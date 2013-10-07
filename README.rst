@@ -12,7 +12,7 @@ The intonation python module has broadly four classes:
    these intervals.
 -  **Histogram**: defines a histogram object with methods used to find
    peaks using different methods and plot them.
--  *\* Pitch*\ \*: Given timestamps in seconds, and pitch values in
+-  **Pitch**: Given timestamps in seconds, and pitch values in
    cents, it defines a pitch object which has a number of methods which
    can be used to study the intervals
 -  **Recording**: Given a pitch object, it defines a recording object
@@ -43,17 +43,17 @@ normalized to tonic. If you don't have this, you should get it from
 or load your own data.
 
 Make sure the data is formatted as a numpy array of mx2 size where m is
-number of total points. The first column should corresponds to time
+number of total points. The first column should correspond to time
 stamps in seconds and the second column should correspond to the pitch
-value in cents. The given file is already formatted this way!
+value in cents (preferably normalized to tonic). The given file is already formatted this way!
 
 .. code:: python
 
     import pickle
     data = loadtxt("88d8196a-123a-4306-9856-4ce3faca14fc.txt")
     intervals = pickle.load(file("ji-intervals.pickle"))
-Have a look at the data, it always does good!
----------------------------------------------
+Have a look at the data!
+------------------------
 
 
 .. code:: python

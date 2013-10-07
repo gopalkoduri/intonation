@@ -146,7 +146,7 @@ class Recording:
             #extract the distribution and estimate the parameters
             distribution = valid_pitch[valid_pitch >= leftbound]
             distribution = distribution[distribution <= rightbound]
-            print peak_pos, "\t", len(distribution), "\t", leftbound, "\t", rightbound
+            #print peak_pos, "\t", len(distribution), "\t", leftbound, "\t", rightbound
 
             interval_index = utils.find_nearest_index(intervals, peak_pos)
             interval = intervals[interval_index]

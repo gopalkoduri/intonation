@@ -1,7 +1,4 @@
 from recording import Recording
 from pitch import Pitch
-from pypeaks import Data, Intervals
-
-del recording
-del pitch
-del pypeaks
+from pypeaks import Data as Histogram
+from pypeaks import Intervals

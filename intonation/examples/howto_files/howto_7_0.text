@@ -1,0 +1,37 @@
+Help on instance of Pitch in module intonation.pitch:
+
+class Pitch
+ |  Methods defined here:
+ |  
+ |  __init__(self, timestamps, pitch)
+ |  
+ |  discretize(self, intervals, slope_thresh=1500, cents_thresh=50)
+ |      This function takes the pitch data and returns it quantized to given
+ |      set of intervals. All transactions must happen in cent scale.
+ |      
+ |      slope_thresh is the bound beyond which the pitch contour is said to transit
+ |      from one svara to another. It is specified in cents/sec.
+ |      
+ |      cents_thresh is a limit within which two pitch values are considered the same.
+ |      This is what pushes the quantization limit.
+ |      
+ |      The function returns quantized pitch data.
+ |  
+ |  enforce_duration(self, duration_thresh)
+ |      This method takes a quantized pitch contour and filters out
+ |      those time sections where the contour is not long enough, as specified
+ |      by duration threshold (given in milliseconds).
+ |      
+ |      All transactions assume data in cent scale.
+ |  
+ |  fit_lines(self, window=1500, break_thresh=1500)
+ |      Fits lines to pitch contours.
+ |      
+ |      :param window: size of each chunk to which linear equation is to be fit (in milliseconds).
+ |      To keep it simple, hop is chosen to be one third of the window.
+ |      :param break_thresh: If there is silence beyond this limit (in milliseconds),
+ |      the contour will be broken there into two so that we don't fit a line over and
+ |      including the silent region.
+ |  
+ |  reset(self)
+

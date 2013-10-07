@@ -1,0 +1,47 @@
+Help on instance of Recording in module intonation.recording:
+
+class Recording
+ |  Methods defined here:
+ |  
+ |  __init__(self, pitch_obj)
+ |  
+ |  compute_hist(self, bins=None, density=True, folded=False, weight='duration')
+ |      Computes histogram from the pitch data in Pitch object (pitch), and creates
+ |      a Data object (pypeaks).
+ |      
+ |      :param bins: Refers to number of bins in the histogram, determines the granularity.
+ |      If it is not set, the number of bins which gives the highest granularity is chosen
+ |      automatically.
+ |      :param density: defaults to True, which means the histogram will be a normalized one.
+ |      :param folded: defaults to False. When set to True, all the octaves are folded to one.
+ |      :param weight: It can be one of the 'duration' or 'instance'. In the latter case, make
+ |      sure that the pitch object has the pitch values discretized.
+ |  
+ |  label_contours(self, intervals, window=150, hop=30)
+ |      In a very flowy contour, it is not trivial to say which pitch value corresponds
+ |       to what interval. This function labels pitch contours with intervals by guessing
+ |       from the characteristics of the contour and its melodic context.
+ |      
+ |      :param window: the size of window over which the context is gauged, in milliseconds.
+ |      :param hop: hop size in milliseconds.
+ |  
+ |  parametrize_peaks(self, intervals, max_peakwidth=50, min_peakwidth=25, symmetric_bounds=True)
+ |      Computes and stores the intonation profile of an audio recording.
+ |      
+ |      :param intervals: these will be the reference set of intervals to which peak positions
+ |       correspond to. For each interval, the properties of corresponding peak, if exists,
+ |       will be computed and stored as intonation profile.
+ |      :param max_peakwidth: the maximum allowed width of the peak at the base for computing
+ |      parameters of the distribution.
+ |      :param min_peakwidth: the minimum allowed width of the peak at the base for computing
+ |      parameters of the distribution.
+ |  
+ |  plot_contour_labels(self, new_fig=True)
+ |      Plots the labelled contours!
+ |  
+ |  serialize_contour_labels(self, path)
+ |  
+ |  serialize_hist(self, path)
+ |  
+ |  serialize_intonation(self, path)
+

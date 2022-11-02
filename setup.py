@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='intonation',
-      version='0.1',
+      version='1.0.0',
       description='Python module to analyze, study and research the intonation of musical intervals in music recordings.', requires=['scipy', 'numpy', 'pypeaks'],
       long_description=readme(),
       classifiers=[

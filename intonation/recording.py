@@ -1,9 +1,9 @@
 from __future__ import division
 import pickle
-from pypeaks import Data
+from pypeaks import Histogram
 from scipy.stats import variation, skew, kurtosis
-from pitch import Pitch
-import utils
+from .pitch import Pitch
+from . import utils
 import numpy as np
 import pylab as p
 
@@ -30,7 +30,7 @@ class Recording:
     def compute_hist(self, bins=None, density=True, folded=False, weight="duration"):
         """
         Computes histogram from the pitch data in Pitch object (pitch), and creates
-        a Data object (pypeaks).
+        a Histogram object (pypeaks).
 
         :param bins: Refers to number of bins in the histogram, determines the granularity.
         If it is not set, the number of bins which gives the highest granularity is chosen
@@ -54,7 +54,7 @@ class Recording:
                 bins = max(valid_pitch) - min(valid_pitch)
             n, bin_edges = np.histogram(valid_pitch, bins, density=density)
             bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-            self.histogram = Data(bin_centers, n)
+            self.histogram = Histogram(bin_centers, n)
         elif weight == "instance":
             n = {}
             i = 1
@@ -69,13 +69,13 @@ class Recording:
             n = n.items()
             n.sort(key=lambda x: x[0])
             n = np.array(n)
-            self.histogram = Data(n[:, 0], n[:, 1])
+            self.histogram = Histogram(n[:, 0], n[:, 1])
 
             median_diff = np.median(np.diff(n[:, 0]))
             bin_edges = [n[0, 0] - median_diff/2]
             bin_edges.extend(median_diff/2 + n[:, 0])
             n[:, 1] = n[:, 1]/(n[:, 1].sum()*np.diff(bin_edges))
-            self.histogram = Data(n[:, 0], n[:, 1], default_smooth=False)
+            self.histogram = Histogram(n[:, 0], n[:, 1], default_smooth=False)
 
     def parametrize_peaks(self, intervals, max_peakwidth=50, min_peakwidth=25, symmetric_bounds=True):
         """

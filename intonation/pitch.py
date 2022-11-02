@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 from scipy.ndimage import median_filter
-import utils
+from . import utils
 
 
 class Pitch:

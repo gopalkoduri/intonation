@@ -51,7 +51,7 @@ class Recording:
         if weight == "duration":
             #Step 2.1 set the number of bins (if not passed)
             if not bins:
-                bins = max(valid_pitch) - min(valid_pitch)
+                bins = int(max(valid_pitch) - min(valid_pitch))
             n, bin_edges = np.histogram(valid_pitch, bins, density=density)
             bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
             self.histogram = Histogram(bin_centers, n)
@@ -95,7 +95,7 @@ class Recording:
         valid_pitch = np.array(valid_pitch)
 
         parameters = {}
-        for i in xrange(len(self.histogram.peaks["peaks"][0])):
+        for i in range(len(self.histogram.peaks["peaks"][0])):
             peak_pos = self.histogram.peaks["peaks"][0][i]
             #Set left and right bounds of the distribution.
             max_leftbound = peak_pos - max_peakwidth
@@ -196,7 +196,7 @@ class Recording:
             start_index = start_index + hop_step
             end_index = start_index + window_step
 
-        for i in xrange(exposure, len(means) - exposure + 1):
+        for i in range(exposure, len(means) - exposure + 1):
             _median = np.median(means[i - exposure:i])
             if _median < -5000:
                 continue
